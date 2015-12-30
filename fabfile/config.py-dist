@@ -1,0 +1,79 @@
+from fabric.api import env
+import os,sys
+
+############ Global Configuration Section
+
+# Base path
+base_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+
+# This is the deault user that will be used to log into the remote
+# servers.
+env.user = 'root'
+
+# This is the path to the SSH private key.
+env.key_filename = os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa')
+
+# As a lot of what I will be talking to will be cloud-based hosts, These
+# settings below will allow me to (largly) ignore the known_hosts file.
+env.reject_unknown_hosts = False
+env.disable_known_hosts = True
+
+# This is the path to the SSH public key to use for distribution.
+public_key_filename = os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa.pub')
+
+# The path to where the packages folder.  This folder is where all of the
+# RPMS and other packages will be stored.
+packages = os.path.join(base_path, 'packages')
+
+# System role definitions.  These definitions can be used to specify classes
+# of systems.
+#env.roledefs = {
+#}
+
+
+############ SecurityCenter Configuration Section
+
+# SecurityCenter address
+sc_host = 'ENTER SC ADDRESS'
+
+# SecurityCenter admin Username
+sc_user = 'ENTER SC USERNAME'
+
+# SecurityCenter admin Password
+sc_pass = 'ENTER SC PASWORD'
+
+
+############ Nessus Configuration Section
+
+# This is the Nessus administrative user.  This user will be the primary user
+# that SecurityCenter will be using to interact with Nessus.  We have this
+# specified here as we will be populating this to new scanners as part of the
+# setup process of that scanner.
+nessus_user = 'ENTER NESSUS USERNAME'
+
+# This is the Nessus administrative password.  Same as with the administrative
+# user, we will be pushing this to new scanners as part of the setup process.
+nessus_pass = 'ENTER NESSUS PASSWORD'
+
+# Path to the all-2.0.tar.gz file.  This is the plugin update tarball from
+# SecurityCenter.  If the deployment scripts are installed on SecurityCenter
+# directly, then you will want to simply specify this as the path to the
+# tarball.  Otherwise, this should be set to the path that you are placing
+# the tarball after pulling it from SecurityCenter.
+#
+# On SecurityCenter Use this:
+# nessus_plugins_tarball = '/opt/sc/data/nasl/all-2.0.tar.gz'
+#
+# If remotely pulling use something like this:
+nessus_plugins_tarball = os.path.join(base_path, 'tmp', 'all-2.0.tar.gz')
+
+# Do we want new scanners to be automatically attached to SecurityCenter?
+nessus_attach = True
+
+# Do we want to automatically push plugins out-of-band to the scanner when
+# we install Nessus on the machine for the first time?  This is mainly done
+# when we hit timeouts on getting plugin updates on the remote scanner.
+# Typically timeouts are only a concern in over-commited environments and
+# in cases were scanners are on the opposite end of a slow or high-latency
+# link.
+nessus_auto_upload = True
