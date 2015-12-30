@@ -77,3 +77,36 @@ nessus_attach = True
 # in cases were scanners are on the opposite end of a slow or high-latency
 # link.
 nessus_auto_upload = True
+
+
+############ Passive Vulnerability Scanner Configuration Section
+
+# This is the PVS administrative user.  This user will be the primary user
+# that SecurityCenter will be using to interact with the PVS.  We have this
+# specified here as we will be populating this to new scanners as part of the
+# setup process of that sensor.
+pvs_user = 'ENTER PVS USERNAME'
+
+# This is the PVS administrative password.  Same as with the administrative
+# user, we will be pushing this to new sensors as part of the setup process.
+pvs_pass = 'ENTER PVS PASSWORD'
+
+
+# What networks will the PVS be reporting on?  This is set as part of the
+# initial setup process.  The default values below are the RFC-1918 address
+# space, however feel free to adjust as needed.
+pvs_monitored_ranges = '10.0.0.0/8,172.16.0.0/12,192.168.0.0/16'
+
+# What interface do your PVS sensors typically listen on?  Generally on
+# linux devices, we use ethX notation.  The default here is eth1, or the second
+# interface installed on the host.
+pvs_interface = 'eth1'
+
+# Do we want new sensors to be automatically attached to SecurityCenter?
+pvs_attach = True
+
+
+############ Log Correlation Engine Configuration Section
+
+# What is the LCE address?
+lce_address = 'ENTER LCE ADDRESS HERE'
