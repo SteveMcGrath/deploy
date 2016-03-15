@@ -81,14 +81,8 @@ nessus_auto_upload = True
 
 ############ Passive Vulnerability Scanner Configuration Section
 
-# This is the PVS administrative user.  This user will be the primary user
-# that SecurityCenter will be using to interact with the PVS.  We have this
-# specified here as we will be populating this to new scanners as part of the
-# setup process of that sensor.
-pvs_user = 'ENTER PVS USERNAME'
-
-# This is the PVS administrative password.  Same as with the administrative
-# user, we will be pushing this to new sensors as part of the setup process.
+# This is the PVS administrative password.  We will be pushing this to new
+# password for the admin uswer to new sensors as part of the setup process.
 pvs_pass = 'ENTER PVS PASSWORD'
 
 

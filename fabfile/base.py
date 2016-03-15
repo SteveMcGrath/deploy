@@ -26,19 +26,48 @@ def get_installed(appname):
         return None
 
 
-def get_os():
+#def get_os():
+#    '''
+#    Return the remote host's OS
+#    '''
+#    reos = re.compile(r'\.e[ls](\d)\.')
+#    return 'es%s' % reos.findall(run('uname -r'))[0]
+
+
+def get_dist():
     '''
-    Return the remote host's OS
+    Returns the distribution and version number of the remote host.
     '''
-    reos = re.compile(r'\.e[ls](\d)\.')
-    return 'es%s' % reos.findall(run('uname -r'))[0]
+    uname = run('uname -a')
+    if '.el' in uname:
+        # RedHat Derivatives.
+        rhel = reos = re.compile(r'\.e[ls](\d)\.')
+        return {
+            'dist': 'redhat',
+            'version': 'es%s' % rhel.findall(run('uname -r'))[0],
+            'arch': run('uname -m'),
+        }
+    elif files.exists('/etc/os-release'):
+        # Debian Derivatives.
+        os_file = run('cat /etc/os-release')
+        return {
+            'dist': re.findall(r'\nID=(.*)',os_file)[0].strip('"'),
+            'version': re.findall(r'\nVERSION_ID=(.*)',os_file)[0].strip('"'),
+            'arch': run('uname -m'),
+        }
+    else:
+        return {
+            'dist': 'unknown',
+            'version': 'unknown',
+            'arch': 'unknown',
+        }
 
 
 def get_arch():
     '''
     Return the remote host's architecture
     '''
-    hostarch = run('uname -i')
+    hostarch = run('uname -m')
     if hostarch in ['i386', 'i486', 'i586', 'i686']:
         hostarch = 'i386'
     if hostarch in ['amd64', 'x86_64']:

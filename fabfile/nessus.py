@@ -17,14 +17,14 @@ def prep():
 
     prep.prep()
 
-    opsys = base.get_os()
+    opsys = base.get_dist()
     print "\'%s\'" % opsys
-    if opsys == 'es6':
+    if opsys['version'] == 'es6':
         run('chkconfig iptables off')
         run('chkconfig ip6tables off')
         run('service iptables stop')
         run('service ip6tables stop')
-    elif opsys == 'es7':
+    elif opsys['version'] == 'es7':
         run('systemctl disable firewalld')
         run('systemctl stop firewalld')
 
@@ -49,9 +49,9 @@ def install(version=None, attach=None, pushplugs=None):
         # If Nessus isn't installed, then we will need to determine the
         # appropriate package by querying the info from the machine
         # directly.
-        os = base.get_os()
-        arch = base.get_arch()
-        package = base.local_rpm('Nessus', os, arch, version=version)
+        opsys = base.get_dist()
+        package = base.local_rpm('Nessus', opsys['version'],
+                                    opsys['arch'], version=version)
     else:
         # If we have an installed version of Nessus, when we can leverage
         # the information returned from get_installed.
