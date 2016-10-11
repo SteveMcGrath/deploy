@@ -2,6 +2,7 @@ from fabric.api import *
 from fabric.contrib import *
 import re, os
 from . import config
+from .pkg import get_package
 
 env = config.env
 
@@ -27,32 +28,36 @@ def prep():
 
 
 @task
-def install(version=None, update_db=False):
+def install(version=None):
     '''
     Installs/Updates PVS.
     A specific version can be optionally specified.  If no version is specified
     then the most current version will be selected.
     '''
-    from . import base, pkg
+    from . import base
     from securitycenter import SecurityCenter5
-    pkg.initialize(update=update_db)
 
     # We need to set warn_only for rpm -q
     env.warn_only = True
 
     # Now to get the installed version info
-    iver = base.is_installed('pvs')
+    installed = base.is_installed('pvs')
     opsys = base.get_dist()
-    package = pkg.get_package(name='pvs', dist=opsys['dist'], dist_ver=opsys['version'])
+    package = get_package(
+        name='pvs', 
+        arch=opsys['arch'], 
+        dist_ver=opsys['version'],
+        version=version
+    )
     if not package:
         print '!!! No Valid PVS Package Found !!!'
-        return None
+        return
 
     # Now to place the package on the remote server.
     put(package.path, '/tmp/pvs.rpm')
     run('yum -y install /tmp/pvs.rpm')
 
-    if not iver:
+    if not installed:
         # As PVS has not been installed on this host before, we will
         # need to configure Nessus for use as a SecurityCenter managed
         # scanner.

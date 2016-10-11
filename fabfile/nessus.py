@@ -1,6 +1,7 @@
 from fabric.api import *
 from fabric.contrib import *
 import re, os
+from .pkg import get_package
 from . import config
 
 env = config.env
@@ -30,7 +31,7 @@ def prep():
 
 
 @task
-def install(version=None, attach=None, pushplugs=None):
+def install(version=None, attach=None, pushplugs=None, detached=False):
     '''
     Installs/Updates Nessus.
     A specific version can be optionally specified.  If no version is specified
@@ -38,44 +39,48 @@ def install(version=None, attach=None, pushplugs=None):
     '''
     from . import base
     from securitycenter import SecurityCenter5
+    opsys = base.get_dist()
 
     # We need to set warn_only for rpm -q
     env.warn_only = True
 
     # Now to get the installed version info
-    iver = base.get_installed('Nessus')
+    installed = base.is_installed('Nessus')
+    package = get_package(
+        name='Nessus', 
+        dist_ver=opsys['version'],
+        arch=opsys['arch'], 
+        version=version
+    )
 
-    if not iver:
-        # If Nessus isn't installed, then we will need to determine the
-        # appropriate package by querying the info from the machine
-        # directly.
-        opsys = base.get_dist()
-        package = base.local_rpm('Nessus', opsys['version'],
-                                    opsys['arch'], version=version)
-    else:
-        # If we have an installed version of Nessus, when we can leverage
-        # the information returned from get_installed.
-        package = base.local_rpm('Nessus', iver[1], iver[2], version=version)
     if not package:
         print '!!!! No valid package found! Aborting! !!!'
+        return
 
     # Now to place the package on the remote server.
-    put(package, '/tmp/Nessus.rpm')
+    put(str(package), '/tmp/Nessus.rpm')
     run('yum -y -q install /tmp/Nessus.rpm')
 
-    if not iver:
-        # As Nessus has not been installed on this host before, we will
-        # need to configure Nessus for use as a SecurityCenter managed
-        # scanner.
-        run('/opt/nessus/sbin/nessuscli fetch --security-center')
-        with settings(prompts={
-            'Login password: ': config.nessus_pass,
-            'Login password (again): ': config.nessus_pass,
-            'Do you want this user to be a Nessus \'system administrator\' user (can upload plugins, etc.)? (y/n) [n]: ': 'y',
-            '(the user can have an empty rules set)': '\n',
-            'Is that ok? (y/n) [n]: ': 'y',
-        }):
-            run('/opt/nessus/sbin/nessuscli adduser %s' % config.nessus_user)
+    if not installed:
+        if config.nessus_scanner_type == 'securitycenter' and not detached:
+            # As Nessus has not been installed on this host before, we will
+            # need to configure Nessus for use as a SecurityCenter managed
+            # scanner.
+            run('/opt/nessus/sbin/nessuscli fetch --security-center')
+            with settings(prompts={
+                'Login password: ': config.nessus_pass,
+                'Login password (again): ': config.nessus_pass,
+                'Do you want this user to be a Nessus \'system administrator\' user (can upload plugins, etc.)? (y/n) [n]: ': 'y',
+                '(the user can have an empty rules set)': '\n',
+                'Is that ok? (y/n) [n]: ': 'y',
+            }):
+                run('/opt/nessus/sbin/nessuscli adduser %s' % config.nessus_user)
+        elif config.nessus_scanner_type == 'managed' and not detached:
+            # In order to configure a Nessus Manager/Nessus Cloud remote scanner,
+            # will need to perform the following actions:
+
+            # TODO!!!!
+            pass
     else:
         # As Nessus is already installed, we only need to stop the currently
         # running version of Nessus.
@@ -101,7 +106,7 @@ def install(version=None, attach=None, pushplugs=None):
     # an override as the "attach" flag.  Setting that to really anything will
     # override the safety checks and attach the scanner to SecurityCenter as
     # well.
-    if (config.nessus_attach and not iver) or attach:
+    if (config.nessus_attach and config.nessus_scanner_type == 'securitycenter' and not installed) or attach:
         sc = SecurityCenter5(config.sc_host)
         sc.login(config.sc_user, config.sc_pass)
         sc.post('scanner', json={

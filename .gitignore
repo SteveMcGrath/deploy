@@ -3,3 +3,5 @@
 fabfile/config.py
 packages
 tmp
+keys/*
+/packages.db

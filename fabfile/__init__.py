@@ -1,7 +1,8 @@
-from . import config
-from . import base
-from . import prep
-from . import nessus
-from . import sc
-from . import pvs
-from . import adhoc
+import config
+import base
+import prep
+import nessus
+import sc
+import pvs
+import adhoc
+import pkg

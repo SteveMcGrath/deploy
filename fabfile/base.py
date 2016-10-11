@@ -21,9 +21,9 @@ def is_installed(appname):
 
     # If we have info, then return it, else return None
     if len(output) > 0:
-        return LooseVersion(output[0][0]), 'es%s' % output[0][1], output[0][2]
+        return True
     else:
-        return None
+        return False
 
 
 def get_dist():

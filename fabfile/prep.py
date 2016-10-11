@@ -3,6 +3,7 @@ from fabric.contrib import *
 import re, os
 from . import config
 
+
 env = config.env
 
 
@@ -58,18 +59,23 @@ def sshkeys(keyfile=None):
 def ssh_remove_weak_ciphers():
     from base import get_dist
     opsys = get_dist()
+    ciphers = 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr,blowfish-cbc'
+    hmacs = 'MACs hmac-sha1,hmac-ripemd160'
     ssh_config = '\n'.join(['',
         '# default is aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,',
         '# aes128-cbc,3des-cbc,blowfish-cbc,cast128-cbc,aes192-cbc,',
         '# aes256-cbc,arcfour',
         '# you can remove the cbc ciphers by adding the line\n',
-        'Ciphers aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,arcfour\n',
+        '%ss\n' % ciphers,
         '# default is hmac-md5,hmac-sha1,hmac-ripemd160,hmac-sha1-96,hmac-md5-96',
         '# you can remove the hmac-md5 MACs with\n',
-        'MACs hmac-sha1,hmac-ripemd160',
+        hmacs,
     ]), 
     if not files.contains('/etc/ssh/sshd_config', 'you can remove the hmac-md5', use_sudo=True):   
         files.append('/etc/ssh/sshd_config', ssh_config, use_sudo=True)
+    else:
+        files.sed('/etc/ssh/sshd_config', '^Ciphers.*', ciphers, use_sudo=True)
+        files.sed('/etc/ssh/sshd_config', '^MACs.*', hmacs, use_sudo=True)
     if opsys['dist'] == 'redhat':
         run('service sshd restart')
 
@@ -149,7 +155,7 @@ def rmate():
     sudo('chmod 755 /usr/local/bin/rmate')
 
 
-@task
+@task(default=True)
 def prep():
     '''
     Generic preperation script for CentOS/RHEL boxen.
