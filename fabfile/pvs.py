@@ -27,35 +27,29 @@ def prep():
 
 
 @task
-def install(version=None):
+def install(version=None, update_db=False):
     '''
     Installs/Updates PVS.
     A specific version can be optionally specified.  If no version is specified
     then the most current version will be selected.
     '''
-    from . import base
+    from . import base, pkg
     from securitycenter import SecurityCenter5
+    pkg.initialize(update=update_db)
 
     # We need to set warn_only for rpm -q
     env.warn_only = True
 
     # Now to get the installed version info
-    iver = base.get_installed('pvs')
-
-    if not iver:
-        # If PVS isn't installed, then we will need to determine the
-        # appropriate package by querying the info from the machine
-        # directly.
-        os = base.get_os()
-        arch = base.get_arch()
-        package = base.local_rpm('pvs', os, arch, version=version)
-    else:
-        # If we have an installed version of PVS, when we can leverage
-        # the information returned from get_installed.
-        package = base.local_rpm('pvs', iver[1], iver[2], version=version)
+    iver = base.is_installed('pvs')
+    opsys = base.get_dist()
+    package = pkg.get_package(name='pvs', dist=opsys['dist'], dist_ver=opsys['version'])
+    if not package:
+        print '!!! No Valid PVS Package Found !!!'
+        return None
 
     # Now to place the package on the remote server.
-    put(package, '/tmp/pvs.rpm')
+    put(package.path, '/tmp/pvs.rpm')
     run('yum -y install /tmp/pvs.rpm')
 
     if not iver:
