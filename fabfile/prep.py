@@ -66,10 +66,10 @@ def ssh_remove_weak_ciphers():
         '# aes128-cbc,3des-cbc,blowfish-cbc,cast128-cbc,aes192-cbc,',
         '# aes256-cbc,arcfour',
         '# you can remove the cbc ciphers by adding the line\n',
-        '%ss\n' % ciphers,
+        '%s\n' % ciphers,
         '# default is hmac-md5,hmac-sha1,hmac-ripemd160,hmac-sha1-96,hmac-md5-96',
         '# you can remove the hmac-md5 MACs with\n',
-        hmacs,
+        '%s\n' % hmacs,
     ]), 
     if not files.contains('/etc/ssh/sshd_config', 'you can remove the hmac-md5', use_sudo=True):   
         files.append('/etc/ssh/sshd_config', ssh_config, use_sudo=True)
@@ -153,6 +153,16 @@ def rmate():
     elif opsys['dist'] in ['debian', 'ubuntu']:
         sudo('wget -O /usr/local/bin/rmate %s' % url)
     sudo('chmod 755 /usr/local/bin/rmate')
+
+
+@task
+def rsyslog():
+    '''
+    Configured rsyslog to point log data to the syslog server
+    '''
+    rsyslog = '*.* @@%s:514' % config.syslog_server
+    files.append('/etc/rsyslog.conf', rsyslog, use_sudo=True)
+    run('systemctl restart rsyslog')
 
 
 @task(default=True)
