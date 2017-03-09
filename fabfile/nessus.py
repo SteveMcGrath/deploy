@@ -31,7 +31,7 @@ def prep():
 
 
 @task
-def install(version=None, attach=None, pushplugs=None, detached=False):
+def install(version=None, attach=None, pushplugs=None, detached=False, key=None, host=None, port=None):
     '''
     Installs/Updates Nessus.
     A specific version can be optionally specified.  If no version is specified
@@ -40,6 +40,13 @@ def install(version=None, attach=None, pushplugs=None, detached=False):
     from . import base
     from securitycenter import SecurityCenter5
     opsys = base.get_dist()
+
+    if not key:
+        key = config.nessus_key
+    if not host:
+        host = 'cloud.tenable.com'
+    if not port:
+        port = 443
 
     # We need to set warn_only for rpm -q
     env.warn_only = True
@@ -78,9 +85,10 @@ def install(version=None, attach=None, pushplugs=None, detached=False):
         elif config.nessus_scanner_type == 'managed' and not detached:
             # In order to configure a Nessus Manager/Nessus Cloud remote scanner,
             # will need to perform the following actions:
-
-            # TODO!!!!
-            pass
+            run(' '.join(['/opt/nessus/sbin/nessuscli managed link',
+                '--key=%s' % key,
+                '--host=%s' % host,
+                '--port=%s' % port]))
     else:
         # As Nessus is already installed, we only need to stop the currently
         # running version of Nessus.
@@ -129,6 +137,19 @@ def install(version=None, attach=None, pushplugs=None, detached=False):
             'zones': []
         })
         sc.logout()
+
+
+@task
+def rsyslog():
+    '''
+    Pushes Nessus Log data into rsyslog
+    '''
+    if not files.exists('/etc/rsyslog.d/nessusd.conf'):
+        put('packages/nessusd_rsyslog.conf', '/etc/rsyslog.d/nessusd.conf')
+        run('systemctl restart rsyslog')
+    if not files.exists('/etc/logrotate.d/nessusd'):
+        put('packages/nessusd_logrotate.conf', '/etc/logrotate.d/nessusd')
+        run('systemctl restart logrotate')
 
 
 @task

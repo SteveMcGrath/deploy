@@ -78,6 +78,14 @@ nessus_attach = True
 # link.
 nessus_auto_upload = True
 
+# Is this scanner supposed to be managed by either Nessus manager or
+# Tenable.io?
+nessus_managed = True
+
+# This is the linking key used to link the scanner into the Nessus Manager
+# or Tenable.io console.
+nessus_key = ''
+
 
 ############ Passive Vulnerability Scanner Configuration Section
 
